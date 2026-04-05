@@ -150,6 +150,37 @@ html, body {
   position: relative;
 }
 
+.sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sidebar-settings-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-focus);
+}
+
+.sidebar-settings-btn .icon {
+  color: var(--text-secondary);
+}
+
 .conv-item:hover {
   background: var(--bg-hover);
 }

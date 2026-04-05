@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import MessageBubble from "@/components/MessageBubble";
 import ChatInput from "@/components/ChatInput";
 import SettingsModal, { AppConfig, DEFAULT_CONFIG } from "@/components/SettingsModal";
-import { Bot, Settings } from "lucide-react";
+import { Bot } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -236,17 +236,10 @@ export default function ChatPage() {
         onDelete={handleDelete}
         onRename={handleRename}
         isLoading={loadingConvs}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       <main className="main-panel">
-        <button 
-          className="settings-toggle-btn" 
-          onClick={() => setIsSettingsOpen(true)}
-          title="Settings"
-        >
-          <Settings size={18} />
-        </button>
-
         {/* Header */}
         <header className="chat-header">
           <div className="chat-header-inner">

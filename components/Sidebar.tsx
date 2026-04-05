@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, memo } from "react";
-import { Pencil, Trash2, Check, X, MessageSquare } from "lucide-react";
+import { Pencil, Trash2, Check, X, MessageSquare, Settings } from "lucide-react";
 
 interface Conversation {
   conversationId: string;
@@ -17,6 +17,7 @@ interface SidebarProps {
   onDelete: (id: string) => void;
   onRename: (id: string, title: string) => void;
   isLoading: boolean;
+  onOpenSettings: () => void;
 }
 
 const Sidebar = memo(function Sidebar({
@@ -27,6 +28,7 @@ const Sidebar = memo(function Sidebar({
   onDelete,
   onRename,
   isLoading,
+  onOpenSettings,
 }: SidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -143,6 +145,13 @@ const Sidebar = memo(function Sidebar({
           ))
         )}
       </nav>
+
+      <div className="sidebar-footer">
+        <button className="sidebar-settings-btn" onClick={onOpenSettings}>
+          <Settings size={18} className="icon" />
+          <span>Settings & Config</span>
+        </button>
+      </div>
     </aside>
   );
 });
