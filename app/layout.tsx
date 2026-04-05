@@ -9,12 +9,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AIChat — Your AI Assistant",
+  title: "GuAI",
   description:
     "A ChatGPT-like AI chat application with multiple conversation support, powered by advanced language models.",
   keywords: ["AI", "chat", "assistant", "conversations"],
   openGraph: {
-    title: "AIChat — Your AI Assistant",
+    title: "GuAI — Your AI Assistant",
     description: "Chat with AI across multiple conversations, all persisted securely.",
     type: "website",
   },

@@ -60,7 +60,7 @@ const Sidebar = memo(function Sidebar({
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <span className="sidebar-logo-icon">✦</span>
-          <span className="sidebar-logo-text">AIChat</span>
+          <span className="sidebar-logo-text">GuAI</span>
         </div>
         <button className="new-chat-btn" onClick={onNew}>
           <span>+</span>

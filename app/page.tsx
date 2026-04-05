@@ -5,7 +5,8 @@ import { v4 as uuidv4 } from "uuid";
 import Sidebar from "@/components/Sidebar";
 import MessageBubble from "@/components/MessageBubble";
 import ChatInput from "@/components/ChatInput";
-import { Bot } from "lucide-react";
+import SettingsModal, { AppConfig, DEFAULT_CONFIG } from "@/components/SettingsModal";
+import { Bot, Settings } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -28,10 +29,15 @@ export default function ChatPage() {
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Fetch conversation list
-  const fetchConversations = async () => {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [config, setConfig] = useState<AppConfig | null>(null);
+
+  const fetchConversations = useCallback(async (cfg: AppConfig | null) => {
+    if (!cfg) return;
     try {
-      const res = await fetch("/api/conversations");
+      const res = await fetch("/api/conversations", {
+        headers: { "x-app-config": JSON.stringify(cfg) },
+      });
       if (res.ok) {
         const data = await res.json();
         setConversations(data);
@@ -41,14 +47,27 @@ export default function ChatPage() {
     } finally {
       setLoadingConvs(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchConversations();
-    // Restore last active conversation from localStorage
-    const saved = localStorage.getItem("currentConversationId");
-    if (saved) setCurrentId(saved);
-  }, []);
+    const saved = localStorage.getItem("ai_chat_config");
+    let initialConfig = DEFAULT_CONFIG;
+    if (saved) {
+      try {
+        initialConfig = JSON.parse(saved);
+        setConfig(initialConfig);
+      } catch {
+        setConfig(DEFAULT_CONFIG);
+      }
+    } else {
+      setConfig(DEFAULT_CONFIG);
+      setIsSettingsOpen(true); // Force settings on first load
+    }
+    
+    fetchConversations(initialConfig);
+    const savedConv = localStorage.getItem("currentConversationId");
+    if (savedConv) setCurrentId(savedConv);
+  }, [fetchConversations]);
 
   // Fetch messages when switching conversation
   useEffect(() => {
@@ -61,7 +80,9 @@ export default function ChatPage() {
     const load = async () => {
       setLoadingMsgs(true);
       try {
-        const res = await fetch(`/api/conversations/${currentId}`);
+        const res = await fetch(`/api/conversations/${currentId}`, {
+          headers: { "x-app-config": JSON.stringify(config) },
+        });
         if (res.ok) {
           const data = await res.json();
           setMessages(data.messages ?? []);
@@ -72,8 +93,10 @@ export default function ChatPage() {
         setLoadingMsgs(false);
       }
     };
-    load();
-  }, [currentId]);
+    if (config) {
+      load();
+    }
+  }, [currentId, config]);
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -94,7 +117,10 @@ export default function ChatPage() {
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-app-config": JSON.stringify(config)
+        },
         body: JSON.stringify({ conversationId: convId, message: messageText }),
       });
       if (!res.ok) {
@@ -135,7 +161,7 @@ export default function ChatPage() {
       }
 
       // Refresh conversation list (title may have changed)
-      await fetchConversations();
+      await fetchConversations(config);
     } catch (err) {
       const errMsg: Message = {
         role: "assistant",
@@ -158,7 +184,10 @@ export default function ChatPage() {
   const handleDelete = useCallback(async (id: string) => {
     if (!confirm("Delete this conversation?")) return;
     try {
-      await fetch(`/api/conversations/${id}`, { method: "DELETE" });
+      await fetch(`/api/conversations/${id}`, { 
+        method: "DELETE",
+        headers: { "x-app-config": JSON.stringify(config) }
+      });
       setConversations((prev) =>
         prev.filter((c) => c.conversationId !== id)
       );
@@ -170,13 +199,17 @@ export default function ChatPage() {
     } catch (err) {
       console.error("Failed to delete", err);
     }
-  }, [currentId]);
+  }, [currentId, config]);
 
   const handleRename = useCallback(async (id: string, title: string) => {
+    if (!config) return;
     try {
       const res = await fetch(`/api/conversations/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-app-config": JSON.stringify(config) 
+        },
         body: JSON.stringify({ title }),
       });
       if (res.ok) {
@@ -189,7 +222,7 @@ export default function ChatPage() {
     } catch (err) {
       console.error("Failed to rename", err);
     }
-  }, []);
+  }, [config]);
 
   const hasMessages = messages.length > 0;
 
@@ -206,6 +239,14 @@ export default function ChatPage() {
       />
 
       <main className="main-panel">
+        <button 
+          className="settings-toggle-btn" 
+          onClick={() => setIsSettingsOpen(true)}
+          title="Settings"
+        >
+          <Settings size={18} />
+        </button>
+
         {/* Header */}
         <header className="chat-header">
           <div className="chat-header-inner">
@@ -213,7 +254,7 @@ export default function ChatPage() {
             <span className="header-title">
               {currentId
                 ? conversations.find((c) => c.conversationId === currentId)?.title ?? "New Conversation"
-                : "AIChat"}
+                : "GuAI"}
             </span>
           </div>
         </header>
@@ -223,7 +264,7 @@ export default function ChatPage() {
           {!currentId && !hasMessages ? (
             <div className="welcome-screen">
               <div className="welcome-icon">✦</div>
-              <h1 className="welcome-title">Welcome to AIChat</h1>
+              <h1 className="welcome-title">Welcome to GuAI</h1>
               <p className="welcome-sub">
                 Your AI-powered assistant. Start a conversation below.
               </p>
@@ -278,6 +319,18 @@ export default function ChatPage() {
         {/* Input */}
         <ChatInput onSend={handleSend} sending={sending} />
       </main>
+
+      {config && (
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          currentConfig={config}
+          onSave={(newCfg) => {
+            setConfig(newCfg);
+            localStorage.setItem("ai_chat_config", JSON.stringify(newCfg));
+          }}
+          onClose={() => setIsSettingsOpen(false)}
+        />
+      )}
     </div>
   );
 }

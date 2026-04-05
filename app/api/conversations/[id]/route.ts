@@ -4,12 +4,16 @@ import Conversation from "@/models/Conversation";
 
 // GET /api/conversations/[id] — get messages for a conversation
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const configStr = req.headers.get("x-app-config");
+    if (!configStr) throw new Error("No config provided");
+    const config = JSON.parse(configStr);
+    await connectDB(config.mongoUri);
+
     const { id } = await context.params;
-    await connectDB();
 
     const conversation = await Conversation.findOne(
       { conversationId: id },
@@ -39,14 +43,17 @@ export async function PATCH(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const configStr = req.headers.get("x-app-config");
+    if (!configStr) throw new Error("No config provided");
+    const config = JSON.parse(configStr);
+    await connectDB(config.mongoUri);
+
     const { id } = await context.params;
     const { title } = await req.json();
 
     if (!title?.trim()) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
-
-    await connectDB();
 
     const conversation = await Conversation.findOneAndUpdate(
       { conversationId: id },
@@ -73,12 +80,16 @@ export async function PATCH(
 
 // DELETE /api/conversations/[id] — delete a conversation
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const configStr = req.headers.get("x-app-config");
+    if (!configStr) throw new Error("No config provided");
+    const config = JSON.parse(configStr);
+    await connectDB(config.mongoUri);
+
     const { id } = await context.params;
-    await connectDB();
 
     const result = await Conversation.deleteOne({ conversationId: id });
 

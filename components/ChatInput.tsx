@@ -45,7 +45,7 @@ export default function ChatInput({ onSend, sending }: ChatInputProps) {
           value={input}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder="Message AIChat… (Shift+Enter for new line)"
+          placeholder="Message GuAI (Shift+Enter for new line)"
           rows={1}
           disabled={sending}
         />

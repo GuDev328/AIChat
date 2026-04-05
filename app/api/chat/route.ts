@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Conversation from "@/models/Conversation";
 
-const LLM_API_URL = "https://llm.chiasegpu.vn/v1/chat/completions";
-const LLM_API_KEY = process.env.LLM_API_KEY as string;
-const MODEL = "claude-sonnet-4.6";
-const MAX_CONTEXT_MESSAGES = 30;
-
 export async function POST(req: NextRequest) {
   try {
+    const configStr = req.headers.get("x-app-config");
+    if (!configStr) throw new Error("No config provided");
+    const config = JSON.parse(configStr);
+
     const body = await req.json();
     const { conversationId, message } = body as {
       conversationId: string;
@@ -22,12 +21,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await connectDB();
+    await connectDB(config.mongoUri);
+
+    const maxContextMsg = parseInt(config.maxContext) || 30;
 
     // 1. Find or create conversation with limited context using $slice
     let conversation = await Conversation.findOne(
       { conversationId },
-      { messages: { $slice: -MAX_CONTEXT_MESSAGES }, title: 1 },
+      { messages: { $slice: -maxContextMsg }, title: 1 },
     ).lean();
 
     if (!conversation) {
@@ -48,14 +49,14 @@ export async function POST(req: NextRequest) {
     contextMessages.push({ role: "user", content: message });
 
     // 4. Call external LLM API
-    const llmResponse = await fetch(LLM_API_URL, {
+    const llmResponse = await fetch(config.apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${LLM_API_KEY}`,
+        Authorization: `Bearer ${config.apiKey}`,
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: config.model,
         messages: contextMessages,
         stream: true,
       }),
@@ -135,7 +136,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("Chat API error:", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal Server Error" },
       { status: 500 },
     );
   }

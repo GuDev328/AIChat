@@ -1,14 +1,9 @@
 import mongoose, { Mongoose } from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI as string;
-
-if (!MONGODB_URI) {
-  throw new Error("Please define the MONGODB_URI environment variable in .env.local");
-}
-
 interface MongooseCache {
   conn: Mongoose | null;
   promise: Promise<Mongoose> | null;
+  uri: string | null;
 }
 
 declare global {
@@ -16,18 +11,37 @@ declare global {
   var _mongooseCache: MongooseCache;
 }
 
-const globalCache = global._mongooseCache ?? { conn: null, promise: null };
+const globalCache = global._mongooseCache ?? { conn: null, promise: null, uri: null };
 global._mongooseCache = globalCache;
 
-export async function connectDB(): Promise<Mongoose> {
-  if (globalCache.conn) return globalCache.conn;
+export async function connectDB(uri: string): Promise<Mongoose> {
+  if (!uri) {
+    throw new Error("No MongoDB URI provided to connectDB");
+  }
+
+  if (globalCache.conn && globalCache.uri === uri) {
+    return globalCache.conn;
+  }
+
+  if (globalCache.conn && globalCache.uri !== uri) {
+    await mongoose.disconnect();
+    globalCache.conn = null;
+    globalCache.promise = null;
+  }
 
   if (!globalCache.promise) {
-    globalCache.promise = mongoose.connect(MONGODB_URI, {
+    globalCache.uri = uri;
+    globalCache.promise = mongoose.connect(uri, {
       bufferCommands: false,
     });
   }
 
-  globalCache.conn = await globalCache.promise;
-  return globalCache.conn;
+  try {
+    globalCache.conn = await globalCache.promise;
+    return globalCache.conn;
+  } catch (err) {
+    globalCache.promise = null;
+    globalCache.uri = null;
+    throw err;
+  }
 }
