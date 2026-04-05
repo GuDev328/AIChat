@@ -110,7 +110,7 @@ export default function SettingsModal({
                   onChange={(e) =>
                     setConfig({
                       ...config,
-                      maxContext: parseInt(e.target.value) || 30,
+                      maxContext: parseInt(e.target.value),
                     })
                   }
                 />
