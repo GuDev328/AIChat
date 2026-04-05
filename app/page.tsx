@@ -28,6 +28,9 @@ export default function ChatPage() {
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const userScrolledUp = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [config, setConfig] = useState<AppConfig | null>(null);
@@ -98,10 +101,28 @@ export default function ChatPage() {
     }
   }, [currentId, config]);
 
-  // Auto scroll to bottom
+  // Smart auto-scroll: only scroll if user is near the bottom
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollAreaRef.current;
+    if (!el) return;
+    if (!userScrolledUp.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, sending]);
+
+  // Track whether user has scrolled up
+  const handleScroll = useCallback(() => {
+    const el = scrollAreaRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    userScrolledUp.current = distanceFromBottom > 100;
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  }, []);
 
   const handleSend = async (messageText: string) => {
     if (!messageText || sending) return;
@@ -109,10 +130,13 @@ export default function ChatPage() {
     const convId = currentId ?? uuidv4();
     if (!currentId) setCurrentId(convId);
 
-    // Optimistic update
+    // Optimistic update — reset scroll lock so user sees their message
+    userScrolledUp.current = false;
     const userMsg: Message = { role: "user", content: messageText, createdAt: new Date().toISOString() };
     setMessages((prev) => [...prev, userMsg]);
     setSending(true);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       const res = await fetch("/api/chat", {
@@ -122,6 +146,7 @@ export default function ChatPage() {
           "x-app-config": JSON.stringify(config)
         },
         body: JSON.stringify({ conversationId: convId, message: messageText }),
+        signal: controller.signal,
       });
       if (!res.ok) {
         let errStr = "Unknown error";
@@ -144,6 +169,7 @@ export default function ChatPage() {
       ]);
 
       while (true) {
+        if (controller.signal.aborted) break;
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -159,17 +185,29 @@ export default function ChatPage() {
           return newMsgs;
         });
       }
+      if (controller.signal.aborted) {
+        // Clean up: keep whatever text was generated
+        reader.cancel();
+      }
 
       // Refresh conversation list (title may have changed)
-      await fetchConversations(config);
+      if (!controller.signal.aborted) {
+        await fetchConversations(config);
+      }
     } catch (err) {
-      const errMsg: Message = {
-        role: "assistant",
-        content: `⚠️ Error: ${err instanceof Error ? err.message : "Something went wrong. Please try again."}`,
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, errMsg]);
+      // Ignore abort errors — user intentionally cancelled
+      if (err instanceof Error && err.name === "AbortError") {
+        // do nothing
+      } else {
+        const errMsg: Message = {
+          role: "assistant",
+          content: `⚠️ Error: ${err instanceof Error ? err.message : "Something went wrong. Please try again."}`,
+          createdAt: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, errMsg]);
+      }
     } finally {
+      abortControllerRef.current = null;
       setSending(false);
     }
   };
@@ -237,6 +275,7 @@ export default function ChatPage() {
         onRename={handleRename}
         isLoading={loadingConvs}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        disabled={sending}
       />
 
       <main className="main-panel">
@@ -253,7 +292,7 @@ export default function ChatPage() {
         </header>
 
         {/* Messages */}
-        <div className="messages-area">
+        <div className="messages-area" ref={scrollAreaRef} onScroll={handleScroll}>
           {!currentId && !hasMessages ? (
             <div className="welcome-screen">
               <div className="welcome-icon">✦</div>
@@ -310,7 +349,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input */}
-        <ChatInput onSend={handleSend} sending={sending} />
+        <ChatInput onSend={handleSend} sending={sending} onCancel={handleCancel} />
       </main>
 
       {config && (

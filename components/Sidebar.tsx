@@ -18,6 +18,7 @@ interface SidebarProps {
   onRename: (id: string, title: string) => void;
   isLoading: boolean;
   onOpenSettings: () => void;
+  disabled?: boolean;
 }
 
 const Sidebar = memo(function Sidebar({
@@ -29,6 +30,7 @@ const Sidebar = memo(function Sidebar({
   onRename,
   isLoading,
   onOpenSettings,
+  disabled = false,
 }: SidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -58,13 +60,13 @@ const Sidebar = memo(function Sidebar({
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${disabled ? "disabled-sidebar" : ""}`}>
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <span className="sidebar-logo-icon">✦</span>
           <span className="sidebar-logo-text">GuAI</span>
         </div>
-        <button className="new-chat-btn" onClick={onNew}>
+        <button className="new-chat-btn" onClick={onNew} disabled={disabled}>
           <span>+</span>
           <span>New Chat</span>
         </button>
@@ -89,8 +91,8 @@ const Sidebar = memo(function Sidebar({
           conversations.map((conv) => (
             <div
               key={conv.conversationId}
-              className={`conv-item ${currentId === conv.conversationId ? "active" : ""}`}
-              onClick={() => onSelect(conv.conversationId)}
+              className={`conv-item ${currentId === conv.conversationId ? "active" : ""} ${disabled ? "disabled-item" : ""}`}
+              onClick={() => !disabled && onSelect(conv.conversationId)}
             >
               {editingId === conv.conversationId ? (
                 <div
@@ -147,7 +149,7 @@ const Sidebar = memo(function Sidebar({
       </nav>
 
       <div className="sidebar-footer">
-        <button className="sidebar-settings-btn" onClick={onOpenSettings}>
+        <button className="sidebar-settings-btn" onClick={onOpenSettings} disabled={disabled}>
           <Settings size={18} className="icon" />
           <span>Settings & Config</span>
         </button>

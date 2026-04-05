@@ -1,14 +1,15 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Square } from "lucide-react";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   sending: boolean;
+  onCancel: () => void;
 }
 
-export default function ChatInput({ onSend, sending }: ChatInputProps) {
+export default function ChatInput({ onSend, sending, onCancel }: ChatInputProps) {
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -50,13 +51,13 @@ export default function ChatInput({ onSend, sending }: ChatInputProps) {
           disabled={sending}
         />
         <button
-          className={`send-btn ${sending || !input.trim() ? "disabled" : ""}`}
-          onClick={handleSend}
-          disabled={sending || !input.trim()}
-          aria-label="Send message"
+          className={`send-btn ${sending ? "cancel" : (!input.trim() ? "disabled" : "")}`}
+          onClick={sending ? onCancel : handleSend}
+          disabled={!sending && !input.trim()}
+          aria-label={sending ? "Cancel generation" : "Send message"}
         >
           {sending ? (
-            <Loader2 size={18} className="spin" />
+            <Square size={18} className="cancel-icon" />
           ) : (
             <Send size={18} />
           )}

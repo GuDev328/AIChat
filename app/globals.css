@@ -64,6 +64,15 @@ html, body {
   overflow: hidden;
 }
 
+.disabled-sidebar {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.disabled-sidebar * {
+  pointer-events: none;
+}
+
 .sidebar-header {
   padding: 16px 12px 12px;
   border-bottom: 1px solid var(--border);
@@ -114,6 +123,11 @@ html, body {
   background: rgba(99, 102, 241, 0.18);
   border-color: var(--border-focus);
   color: var(--accent-hover);
+}
+
+.new-chat-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .new-chat-btn span:first-child {
@@ -177,6 +191,11 @@ html, body {
   border-color: var(--border-focus);
 }
 
+.sidebar-settings-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .sidebar-settings-btn .icon {
   color: var(--text-secondary);
 }
@@ -191,6 +210,16 @@ html, body {
 
 .conv-item.active {
   background: var(--bg-active);
+}
+
+.conv-item.disabled-item {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+.conv-item.disabled-item.active {
+  opacity: 1;
 }
 
 .conv-title {
@@ -675,6 +704,26 @@ html, body {
   background: rgba(99,102,241,0.25);
   color: rgba(255,255,255,0.3);
   cursor: not-allowed;
+}
+
+.send-btn.cancel {
+  background: rgba(239, 68, 68, 0.85);
+  color: white;
+  animation: pulse-red 1.5s ease-in-out infinite;
+}
+
+.send-btn.cancel:hover {
+  background: rgb(239, 68, 68);
+  transform: scale(1.08);
+}
+
+.cancel-icon {
+  fill: white;
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
 }
 
 .input-hint {
