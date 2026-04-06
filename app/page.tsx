@@ -34,6 +34,7 @@ export default function ChatPage() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [config, setConfig] = useState<AppConfig | null>(null);
+  const [inputFocusSignal, setInputFocusSignal] = useState(0);
 
   const fetchConversations = useCallback(async (cfg: AppConfig | null) => {
     if (!cfg) return;
@@ -217,6 +218,7 @@ export default function ChatPage() {
     setCurrentId(newId);
     setMessages([]);
     localStorage.setItem("currentConversationId", newId);
+    setInputFocusSignal((prev) => prev + 1);
   }, []);
 
   const handleDelete = useCallback(async (id: string) => {
@@ -376,7 +378,12 @@ export default function ChatPage() {
         </div>
 
         {/* Input */}
-        <ChatInput onSend={handleSend} sending={sending} onCancel={handleCancel} />
+        <ChatInput
+          onSend={handleSend}
+          sending={sending}
+          onCancel={handleCancel}
+          focusSignal={inputFocusSignal}
+        />
       </main>
 
       {config && (

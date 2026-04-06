@@ -1,15 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send, Square } from "lucide-react";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   sending: boolean;
   onCancel: () => void;
+  focusSignal?: number;
 }
 
-export default function ChatInput({ onSend, sending, onCancel }: ChatInputProps) {
+export default function ChatInput({ onSend, sending, onCancel, focusSignal = 0 }: ChatInputProps) {
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -36,6 +37,10 @@ export default function ChatInput({ onSend, sending, onCancel }: ChatInputProps)
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, [focusSignal]);
 
   return (
     <div className="input-area">
