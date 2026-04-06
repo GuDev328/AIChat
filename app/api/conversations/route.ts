@@ -25,3 +25,27 @@ export async function GET(req: Request) {
     );
   }
 }
+
+// DELETE /api/conversations — delete all conversations
+export async function DELETE(req: Request) {
+  try {
+    const configStr = req.headers.get("x-app-config");
+    if (!configStr) throw new Error("No config provided");
+    const config = JSON.parse(configStr);
+
+    await connectDB(config.mongoUri);
+
+    const result = await Conversation.deleteMany({});
+
+    return NextResponse.json({
+      success: true,
+      deletedCount: result.deletedCount,
+    });
+  } catch (err) {
+    console.error("Delete all conversations error:", err);
+    return NextResponse.json(
+      { error: "Failed to delete all conversations" },
+      { status: 500 }
+    );
+  }
+}

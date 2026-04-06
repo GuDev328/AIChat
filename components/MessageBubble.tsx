@@ -18,7 +18,15 @@ interface MessageBubbleProps {
   message: Message;
 }
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({
+  text,
+  title = "Copy",
+  className = "copy-btn",
+}: {
+  text: string;
+  title?: string;
+  className?: string;
+}) {
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);
@@ -26,7 +34,7 @@ function CopyButton({ text }: { text: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <button className="copy-btn" onClick={handleCopy} title="Copy code">
+    <button className={className} onClick={handleCopy} title={title}>
       {copied ? <Check size={13} /> : <Copy size={13} />}
     </button>
   );
@@ -72,17 +80,24 @@ const MessageBubble = memo(function MessageBubble({ message }: MessageBubbleProp
 
   return (
     <div className={`message-row ${isUser ? "user-row" : "assistant-row"}`}>
-      <div className={`bubble ${isUser ? "user-bubble" : "assistant-bubble"}`}>
-        {isUser ? (
-          <p className="user-text">{message.content}</p>
-        ) : (
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={markdownComponents}
-          >
-            {message.content}
-          </ReactMarkdown>
-        )}
+      <div className={`message-content ${isUser ? "user-message-content" : "assistant-message-content"}`}>
+        <div className={`bubble ${isUser ? "user-bubble" : "assistant-bubble"}`}>
+          <CopyButton
+            text={message.content}
+            title="Copy message"
+            className="copy-btn message-copy-btn"
+          />
+          {isUser ? (
+            <p className="user-text">{message.content}</p>
+          ) : (
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={markdownComponents}
+            >
+              {message.content}
+            </ReactMarkdown>
+          )}
+        </div>
       </div>
     </div>
   );

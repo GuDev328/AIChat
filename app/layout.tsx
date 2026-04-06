@@ -13,6 +13,11 @@ export const metadata: Metadata = {
   description:
     "A ChatGPT-like AI chat application with multiple conversation support, powered by advanced language models.",
   keywords: ["AI", "chat", "assistant", "conversations"],
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
   openGraph: {
     title: "GuAI — Your AI Assistant",
     description: "Chat with AI across multiple conversations, all persisted securely.",

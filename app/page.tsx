@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { v4 as uuidv4 } from "uuid";
-import Sidebar from "@/components/Sidebar";
-import MessageBubble from "@/components/MessageBubble";
 import ChatInput from "@/components/ChatInput";
+import MessageBubble from "@/components/MessageBubble";
 import SettingsModal, { AppConfig, DEFAULT_CONFIG } from "@/components/SettingsModal";
+import Sidebar from "@/components/Sidebar";
 import { Bot } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 interface Message {
   role: "user" | "assistant";
@@ -239,6 +239,29 @@ export default function ChatPage() {
     }
   }, [currentId, config]);
 
+  const handleDeleteAll = useCallback(async () => {
+    if (!config) return;
+    if (!confirm("Delete ALL conversations? This action cannot be undone.")) return;
+
+    try {
+      const res = await fetch("/api/conversations", {
+        method: "DELETE",
+        headers: { "x-app-config": JSON.stringify(config) },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete all conversations");
+      }
+
+      setConversations([]);
+      setCurrentId(null);
+      setMessages([]);
+      localStorage.removeItem("currentConversationId");
+    } catch (err) {
+      console.error("Failed to delete all conversations", err);
+    }
+  }, [config]);
+
   const handleRename = useCallback(async (id: string, title: string) => {
     if (!config) return;
     try {
@@ -272,6 +295,7 @@ export default function ChatPage() {
         onSelect={setCurrentId}
         onNew={createNewConversation}
         onDelete={handleDelete}
+        onDeleteAll={handleDeleteAll}
         onRename={handleRename}
         isLoading={loadingConvs}
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -336,7 +360,10 @@ export default function ChatPage() {
                   <div className="avatar assistant-avatar">
                     <Bot size={16} />
                   </div>
+                  
                   <div className="bubble assistant-bubble typing-bubble">
+                      <span className="dot" />
+                      <span className="dot" />
                     <span className="dot" />
                     <span className="dot" />
                     <span className="dot" />

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GuAI favicon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="4" y="4" width="56" height="56" rx="15" fill="url(#bg)"/>
+
+  <!-- Stylized G -->
+  <path d="M32 15.5c-9.11 0-16.5 7.39-16.5 16.5S22.89 48.5 32 48.5c6.73 0 12.51-4.03 15.05-9.81a2.4 2.4 0 1 0-4.4-1.91A11.7 11.7 0 0 1 32 44.1c-6.68 0-12.1-5.42-12.1-12.1S25.32 19.9 32 19.9c4.37 0 8.2 2.32 10.33 5.8H34.2a2.4 2.4 0 1 0 0 4.8h12.4a2.4 2.4 0 0 0 2.4-2.4V17.2a2.4 2.4 0 1 0-4.8 0v5.43A16.43 16.43 0 0 0 32 15.5Z" fill="url(#g)"/>
+
+  <circle cx="49" cy="15" r="3" fill="#22d3ee" opacity="0.95"/>
+  <rect x="4" y="4" width="56" height="56" rx="15" fill="none" stroke="rgba(255,255,255,0.14)"/>
+</svg>

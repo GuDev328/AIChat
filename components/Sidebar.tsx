@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, memo } from "react";
-import { Pencil, Trash2, Check, X, MessageSquare, Settings } from "lucide-react";
+import { Check, MessageSquare, Pencil, Settings, Trash2, X } from "lucide-react";
+import { memo, useEffect, useRef, useState } from "react";
 
 interface Conversation {
   conversationId: string;
@@ -15,6 +15,7 @@ interface SidebarProps {
   onSelect: (id: string) => void;
   onNew: () => void;
   onDelete: (id: string) => void;
+  onDeleteAll: () => void;
   onRename: (id: string, title: string) => void;
   isLoading: boolean;
   onOpenSettings: () => void;
@@ -27,6 +28,7 @@ const Sidebar = memo(function Sidebar({
   onSelect,
   onNew,
   onDelete,
+  onDeleteAll,
   onRename,
   isLoading,
   onOpenSettings,
@@ -66,10 +68,21 @@ const Sidebar = memo(function Sidebar({
           <span className="sidebar-logo-icon">✦</span>
           <span className="sidebar-logo-text">GuAI</span>
         </div>
-        <button className="new-chat-btn" onClick={onNew} disabled={disabled}>
-          <span>+</span>
-          <span>New Chat</span>
-        </button>
+        <div className="sidebar-header-actions">
+          <button className="new-chat-btn" onClick={onNew} disabled={disabled}>
+            <span>+</span>
+            <span>New Chat</span>
+          </button>
+          <button
+            className="clear-all-btn"
+            onClick={onDeleteAll}
+            disabled={disabled || conversations.length === 0}
+            title="Delete all conversations"
+          >
+            <Trash2 size={14} />
+            <span>Clear All</span>
+          </button>
+        </div>
       </div>
 
       <div className="sidebar-section-label">Conversations</div>
