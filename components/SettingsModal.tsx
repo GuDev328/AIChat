@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Save } from "lucide-react";
+import { Save, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export interface AppConfig {
   mongoUri: string;
   apiUrl: string;
   apiKey: string;
   model: string;
+  visionModel: string;
+  combineModels?: boolean;
   maxContext: number;
 }
 
@@ -16,7 +18,9 @@ export const DEFAULT_CONFIG: AppConfig = {
   apiUrl: "https://llm.chiasegpu.vn/v1/chat/completions",
   apiKey: "",
   model: "claude-sonnet-4.6",
-  maxContext: 30,
+  visionModel: "gpt-5.4",
+  combineModels: false,
+  maxContext: 20,
 };
 
 interface SettingsModalProps {
@@ -42,6 +46,16 @@ export default function SettingsModal({
   }, [isOpen, currentConfig]);
 
   if (!isOpen) return null;
+
+  const isFormValid =
+    config.mongoUri.trim() !== "" &&
+    config.apiUrl.trim() !== "" &&
+    config.apiKey.trim() !== "" &&
+    config.model.trim() !== "" &&
+    config.visionModel.trim() !== "" &&
+    typeof config.maxContext === "number" &&
+    config.maxContext > 0 &&
+    !isNaN(config.maxContext);
 
   return (
     <div className="modal-backdrop">
@@ -77,9 +91,11 @@ export default function SettingsModal({
             <div className="input-field">
               <label>API Key</label>
               <input
-                type="password"
+                type="text"
                 value={config.apiKey}
-                onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
+                onChange={(e) =>
+                  setConfig({ ...config, apiKey: e.target.value })
+                }
                 placeholder="sk-..."
               />
             </div>
@@ -88,33 +104,84 @@ export default function SettingsModal({
               <input
                 type="text"
                 value={config.apiUrl}
-                onChange={(e) => setConfig({ ...config, apiUrl: e.target.value })}
+                onChange={(e) =>
+                  setConfig({ ...config, apiUrl: e.target.value })
+                }
               />
             </div>
-            <div className="input-group-row">
-              <div className="input-field">
-                <label>Model Name</label>
-                <input
-                  type="text"
-                  value={config.model}
-                  onChange={(e) => setConfig({ ...config, model: e.target.value })}
-                />
-              </div>
-              <div className="input-field">
-                <label>Max Context Messages</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={200}
-                  value={config.maxContext}
-                  onChange={(e) =>
-                    setConfig({
-                      ...config,
-                      maxContext: parseInt(e.target.value),
-                    })
-                  }
-                />
-              </div>
+            <div className="input-field">
+              <label>Main Model</label>
+              <input
+                type="text"
+                value={config.model}
+                onChange={(e) =>
+                  setConfig({ ...config, model: e.target.value })
+                }
+              />
+            </div>
+            <div className="input-field">
+              <label>Vision Model</label>
+              <input
+                type="text"
+                value={config.visionModel || ""}
+                onChange={(e) =>
+                  setConfig({ ...config, visionModel: e.target.value })
+                }
+                placeholder="Model for image processing"
+              />
+            </div>
+            <div
+              className="input-field"
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: "8px",
+                marginTop: "-4px",
+              }}
+            >
+              <input
+                type="checkbox"
+                id="combineModels"
+                checked={config.combineModels || false}
+                onChange={(e) =>
+                  setConfig({ ...config, combineModels: e.target.checked })
+                }
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  cursor: "pointer",
+                  accentColor: "var(--accent)",
+                  marginTop: "3px",
+                }}
+              />
+              <label
+                htmlFor="combineModels"
+                style={{
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                  color: "var(--text-secondary)",
+                }}
+              >
+                Check when you want to use vision model just in 1 msg
+                <br />
+                Uncheck when you want to use vision model in all msg if it has
+                images
+              </label>
+            </div>
+            <div className="input-field">
+              <label>Max Context Messages</label>
+              <input
+                type="number"
+                min={1}
+                max={200}
+                value={config.maxContext}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    maxContext: parseInt(e.target.value),
+                  })
+                }
+              />
             </div>
           </div>
         </div>
@@ -125,9 +192,16 @@ export default function SettingsModal({
           </button>
           <button
             className="primary-btn"
+            disabled={!isFormValid}
+            style={{
+              opacity: isFormValid ? 1 : 0.5,
+              cursor: isFormValid ? "pointer" : "not-allowed"
+            }}
             onClick={() => {
-              onSave(config);
-              onClose();
+              if (isFormValid) {
+                onSave(config);
+                onClose();
+              }
             }}
           >
             <Save size={16} />

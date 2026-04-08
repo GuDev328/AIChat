@@ -1,6 +1,6 @@
 "use client";
 
-import ChatInput from "@/components/ChatInput";
+import ChatInput, { AttachedImage } from "@/components/ChatInput";
 import MessageBubble from "@/components/MessageBubble";
 import SettingsModal, { AppConfig, DEFAULT_CONFIG } from "@/components/SettingsModal";
 import Sidebar from "@/components/Sidebar";
@@ -8,9 +8,15 @@ import { Bot } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
+interface MessageImage {
+  base64: string;
+  mimeType: string;
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
+  images?: MessageImage[];
   createdAt?: string;
 }
 
@@ -125,19 +131,36 @@ export default function ChatPage() {
     }
   }, []);
 
-  const handleSend = async (messageText: string) => {
-    if (!messageText || sending) return;
+  const handleSend = async (messageText: string, attachedImages?: AttachedImage[]) => {
+    if ((!messageText && (!attachedImages || attachedImages.length === 0)) || sending) return;
 
     const convId = currentId ?? uuidv4();
     if (!currentId) setCurrentId(convId);
 
+    // Build images for the message (base64 only, no preview URL needed)
+    const msgImages: MessageImage[] | undefined = attachedImages?.map((img) => ({
+      base64: img.base64,
+      mimeType: img.mimeType,
+    }));
+
     // Optimistic update — reset scroll lock so user sees their message
     userScrolledUp.current = false;
-    const userMsg: Message = { role: "user", content: messageText, createdAt: new Date().toISOString() };
+    const userMsg: Message = {
+      role: "user",
+      content: messageText,
+      images: msgImages,
+      createdAt: new Date().toISOString(),
+    };
     setMessages((prev) => [...prev, userMsg]);
     setSending(true);
     const controller = new AbortController();
     abortControllerRef.current = controller;
+
+    // Prepare images for API (base64 + mimeType only, no preview)
+    const apiImages = attachedImages?.map((img) => ({
+      base64: img.base64,
+      mimeType: img.mimeType,
+    }));
 
     try {
       const res = await fetch("/api/chat", {
@@ -146,7 +169,7 @@ export default function ChatPage() {
           "Content-Type": "application/json",
           "x-app-config": JSON.stringify(config)
         },
-        body: JSON.stringify({ conversationId: convId, message: messageText }),
+        body: JSON.stringify({ conversationId: convId, message: messageText, images: apiImages }),
         signal: controller.signal,
       });
       if (!res.ok) {

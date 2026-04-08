@@ -31,7 +31,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html
+      lang="en"
+      className={inter.variable + " mdl-js"}
+      suppressHydrationWarning
+    >
       <body>{children}</body>
     </html>
   );

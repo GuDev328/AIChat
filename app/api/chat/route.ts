@@ -1,22 +1,64 @@
-import { NextRequest, NextResponse } from "next/server";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { connectDB } from "@/lib/mongodb";
 import Conversation from "@/models/Conversation";
+import { NextRequest, NextResponse } from "next/server";
+
+interface ChatImage {
+  base64: string;
+  mimeType: string;
+}
+
+type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+
+function buildUserContent(
+  message: string,
+  images?: ChatImage[],
+): string | ContentPart[] {
+  if (!images || images.length === 0) {
+    return message;
+  }
+
+  const parts: ContentPart[] = [];
+
+  // Add images first so the model "sees" them before the text
+  for (const img of images) {
+    parts.push({
+      type: "image_url",
+      image_url: {
+        url: `data:${img.mimeType};base64,${img.base64}`,
+      },
+    });
+  }
+
+  if (message) {
+    parts.push({ type: "text", text: message });
+  }
+
+  return parts;
+}
 
 export async function POST(req: NextRequest) {
   try {
     const configStr = req.headers.get("x-app-config");
     if (!configStr) throw new Error("No config provided");
     const config = JSON.parse(configStr);
+    console.log(config);
 
     const body = await req.json();
-    const { conversationId, message } = body as {
+    const { conversationId, message, images } = body as {
       conversationId: string;
       message: string;
+      images?: ChatImage[];
     };
 
-    if (!conversationId || !message?.trim()) {
+    if (
+      !conversationId ||
+      (!message?.trim() && (!images || images.length === 0))
+    ) {
       return NextResponse.json(
-        { error: "conversationId and message are required" },
+        { error: "conversationId and message/images are required" },
         { status: 400 },
       );
     }
@@ -32,7 +74,9 @@ export async function POST(req: NextRequest) {
     ).lean();
 
     if (!conversation) {
-      const title = message.length > 30 ? message.slice(0, 30) + "…" : message;
+      const titleSource = message || "Image conversation";
+      const title =
+        titleSource.length > 30 ? titleSource.slice(0, 30) + "…" : titleSource;
       await Conversation.create({
         conversationId,
         title,
@@ -41,12 +85,36 @@ export async function POST(req: NextRequest) {
       conversation = { title, messages: [] } as any;
     }
 
-    const contextMessages = (conversation?.messages || []).map((m: any) => ({
-      role: m.role,
-      content: m.content,
-    }));
-    // Append the new user message to the context
-    contextMessages.push({ role: "user", content: message });
+    // Build context messages - for previous messages, use simple content format
+    const contextMessages = (conversation?.messages || []).map((m: any) => {
+      // If previous message has images stored, rebuild multimodal content
+      if (m.images && m.images.length > 0) {
+        return {
+          role: m.role,
+          content: buildUserContent(m.content, m.images),
+        };
+      }
+      return {
+        role: m.role,
+        content: m.content,
+      };
+    });
+
+    // Append the new user message with multimodal content if images exist
+    const userContent = buildUserContent(message || "", images);
+    contextMessages.push({ role: "user", content: userContent });
+
+    // Check if the entire conversation has any images in DB
+    const hasImagesInDB = await Conversation.exists({
+      conversationId,
+      "messages.images": { $exists: true, $not: { $size: 0 } },
+    });
+
+    const hasImagesNow = images && images.length > 0;
+    const isUseVisionModel =
+      hasImagesNow || (hasImagesInDB && !config.combineModels);
+
+    const useModel = isUseVisionModel ? config.visionModel : config.model;
 
     // 4. Call external LLM API
     const llmResponse = await fetch(config.apiUrl, {
@@ -56,7 +124,7 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${config.apiKey}`,
       },
       body: JSON.stringify({
-        model: config.model,
+        model: useModel,
         messages: contextMessages,
         stream: true,
       }),
@@ -103,11 +171,20 @@ export async function POST(req: NextRequest) {
       },
       async flush() {
         try {
-          const userMessage = {
+          const userMessage: any = {
             role: "user" as const,
-            content: message,
+            content: message || "",
             createdAt: new Date(),
           };
+
+          // Store images in DB if present
+          if (images && images.length > 0) {
+            userMessage.images = images.map((img) => ({
+              base64: img.base64,
+              mimeType: img.mimeType,
+            }));
+          }
+
           const assistantMessage = {
             role: "assistant" as const,
             content: assistantContent || "No response",
@@ -119,7 +196,7 @@ export async function POST(req: NextRequest) {
             {
               $push: { messages: { $each: [userMessage, assistantMessage] } },
               $set: { updatedAt: new Date() },
-            }
+            },
           );
         } catch (dbErr) {
           console.error("Fail to save DB post-stream:", dbErr);

@@ -18,7 +18,7 @@ export async function GET(
     const conversation = await Conversation.findOne(
       { conversationId: id },
       { messages: 1, title: 1, conversationId: 1, _id: 0 }
-    );
+    ).lean();
 
     if (!conversation) {
       return NextResponse.json(
