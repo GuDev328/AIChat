@@ -2,8 +2,12 @@
 
 import ChatInput, { AttachedImage } from "@/components/ChatInput";
 import MessageBubble from "@/components/MessageBubble";
-import SettingsModal, { AppConfig, DEFAULT_CONFIG } from "@/components/SettingsModal";
+import SettingsModal, {
+  AppConfig,
+  DEFAULT_CONFIG,
+} from "@/components/SettingsModal";
 import Sidebar from "@/components/Sidebar";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Bot } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -73,7 +77,7 @@ export default function ChatPage() {
       setConfig(DEFAULT_CONFIG);
       setIsSettingsOpen(true); // Force settings on first load
     }
-    
+
     fetchConversations(initialConfig);
     const savedConv = localStorage.getItem("currentConversationId");
     if (savedConv) setCurrentId(savedConv);
@@ -131,17 +135,26 @@ export default function ChatPage() {
     }
   }, []);
 
-  const handleSend = async (messageText: string, attachedImages?: AttachedImage[]) => {
-    if ((!messageText && (!attachedImages || attachedImages.length === 0)) || sending) return;
+  const handleSend = async (
+    messageText: string,
+    attachedImages?: AttachedImage[],
+  ) => {
+    if (
+      (!messageText && (!attachedImages || attachedImages.length === 0)) ||
+      sending
+    )
+      return;
 
     const convId = currentId ?? uuidv4();
     if (!currentId) setCurrentId(convId);
 
     // Build images for the message (base64 only, no preview URL needed)
-    const msgImages: MessageImage[] | undefined = attachedImages?.map((img) => ({
-      base64: img.base64,
-      mimeType: img.mimeType,
-    }));
+    const msgImages: MessageImage[] | undefined = attachedImages?.map(
+      (img) => ({
+        base64: img.base64,
+        mimeType: img.mimeType,
+      }),
+    );
 
     // Optimistic update — reset scroll lock so user sees their message
     userScrolledUp.current = false;
@@ -165,18 +178,22 @@ export default function ChatPage() {
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "x-app-config": JSON.stringify(config)
+          "x-app-config": JSON.stringify(config),
         },
-        body: JSON.stringify({ conversationId: convId, message: messageText, images: apiImages }),
+        body: JSON.stringify({
+          conversationId: convId,
+          message: messageText,
+          images: apiImages,
+        }),
         signal: controller.signal,
       });
       if (!res.ok) {
         let errStr = "Unknown error";
         try {
-           const errData = await res.json();
-           errStr = errData.error ?? errStr;
+          const errData = await res.json();
+          errStr = errData.error ?? errStr;
         } catch {}
         throw new Error(errStr);
       }
@@ -244,29 +261,31 @@ export default function ChatPage() {
     setInputFocusSignal((prev) => prev + 1);
   }, []);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (!confirm("Delete this conversation?")) return;
-    try {
-      await fetch(`/api/conversations/${id}`, { 
-        method: "DELETE",
-        headers: { "x-app-config": JSON.stringify(config) }
-      });
-      setConversations((prev) =>
-        prev.filter((c) => c.conversationId !== id)
-      );
-      if (currentId === id) {
-        setCurrentId(null);
-        setMessages([]);
-        localStorage.removeItem("currentConversationId");
+  const handleDelete = useCallback(
+    async (id: string) => {
+      if (!confirm("Delete this conversation?")) return;
+      try {
+        await fetch(`/api/conversations/${id}`, {
+          method: "DELETE",
+          headers: { "x-app-config": JSON.stringify(config) },
+        });
+        setConversations((prev) => prev.filter((c) => c.conversationId !== id));
+        if (currentId === id) {
+          setCurrentId(null);
+          setMessages([]);
+          localStorage.removeItem("currentConversationId");
+        }
+      } catch (err) {
+        console.error("Failed to delete", err);
       }
-    } catch (err) {
-      console.error("Failed to delete", err);
-    }
-  }, [currentId, config]);
+    },
+    [currentId, config],
+  );
 
   const handleDeleteAll = useCallback(async () => {
     if (!config) return;
-    if (!confirm("Delete ALL conversations? This action cannot be undone.")) return;
+    if (!confirm("Delete ALL conversations? This action cannot be undone."))
+      return;
 
     try {
       const res = await fetch("/api/conversations", {
@@ -287,28 +306,29 @@ export default function ChatPage() {
     }
   }, [config]);
 
-  const handleRename = useCallback(async (id: string, title: string) => {
-    if (!config) return;
-    try {
-      const res = await fetch(`/api/conversations/${id}`, {
-        method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-app-config": JSON.stringify(config) 
-        },
-        body: JSON.stringify({ title }),
-      });
-      if (res.ok) {
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.conversationId === id ? { ...c, title } : c
-          )
-        );
+  const handleRename = useCallback(
+    async (id: string, title: string) => {
+      if (!config) return;
+      try {
+        const res = await fetch(`/api/conversations/${id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-app-config": JSON.stringify(config),
+          },
+          body: JSON.stringify({ title }),
+        });
+        if (res.ok) {
+          setConversations((prev) =>
+            prev.map((c) => (c.conversationId === id ? { ...c, title } : c)),
+          );
+        }
+      } catch (err) {
+        console.error("Failed to rename", err);
       }
-    } catch (err) {
-      console.error("Failed to rename", err);
-    }
-  }, [config]);
+    },
+    [config],
+  );
 
   const hasMessages = messages.length > 0;
 
@@ -334,14 +354,20 @@ export default function ChatPage() {
             <Bot className="header-icon" size={20} />
             <span className="header-title">
               {currentId
-                ? conversations.find((c) => c.conversationId === currentId)?.title ?? "New Conversation"
+                ? (conversations.find((c) => c.conversationId === currentId)
+                    ?.title ?? "New Conversation")
                 : "GuAI"}
             </span>
           </div>
+          <ThemeToggle />
         </header>
 
         {/* Messages */}
-        <div className="messages-area" ref={scrollAreaRef} onScroll={handleScroll}>
+        <div
+          className="messages-area"
+          ref={scrollAreaRef}
+          onScroll={handleScroll}
+        >
           {!currentId && !hasMessages ? (
             <div className="welcome-screen">
               <div className="welcome-icon">✦</div>
@@ -385,10 +411,10 @@ export default function ChatPage() {
                   <div className="avatar assistant-avatar">
                     <Bot size={16} />
                   </div>
-                  
+
                   <div className="bubble assistant-bubble typing-bubble">
-                      <span className="dot" />
-                      <span className="dot" />
+                    <span className="dot" />
+                    <span className="dot" />
                     <span className="dot" />
                     <span className="dot" />
                     <span className="dot" />

@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import type { ChangeEvent, KeyboardEvent, DragEvent, ClipboardEvent } from "react";
+import type {
+  ChangeEvent,
+  KeyboardEvent,
+  DragEvent,
+  ClipboardEvent,
+} from "react";
 import { Send, Square, ImagePlus, X } from "lucide-react";
 
 export interface AttachedImage {
@@ -68,7 +73,9 @@ export default function ChatInput({
   };
 
   const addFiles = useCallback(async (files: FileList | File[]) => {
-    const fileArr = Array.from(files).filter((f) => ALLOWED_TYPES.includes(f.type));
+    const fileArr = Array.from(files).filter((f) =>
+      ALLOWED_TYPES.includes(f.type),
+    );
     if (fileArr.length === 0) return;
 
     try {
@@ -128,7 +135,7 @@ export default function ChatInput({
         addFiles(imageFiles);
       }
     },
-    [addFiles]
+    [addFiles],
   );
 
   // Drag & drop handlers
@@ -167,7 +174,7 @@ export default function ChatInput({
         addFiles(files);
       }
     },
-    [addFiles]
+    [addFiles],
   );
 
   const handleFileSelect = useCallback(
@@ -177,7 +184,7 @@ export default function ChatInput({
         e.target.value = ""; // reset so same file can be selected again
       }
     },
-    [addFiles]
+    [addFiles],
   );
 
   useEffect(() => {
@@ -209,7 +216,7 @@ export default function ChatInput({
       {isDragging && (
         <div className="drop-overlay">
           <div className="drop-overlay-content">
-            <ImagePlus size={32} />
+            <ImagePlus size={25} />
             <span>Drop images here</span>
           </div>
         </div>
@@ -273,7 +280,11 @@ export default function ChatInput({
           disabled={!sending && isInputEmpty}
           aria-label={sending ? "Cancel generation" : "Send message"}
         >
-          {sending ? <Square size={18} className="cancel-icon" /> : <Send size={18} />}
+          {sending ? (
+            <Square size={18} className="cancel-icon" />
+          ) : (
+            <Send size={18} />
+          )}
         </button>
       </div>
     </div>

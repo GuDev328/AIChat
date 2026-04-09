@@ -1,6 +1,13 @@
 "use client";
 
-import { Check, MessageSquare, Pencil, Settings, Trash2, X } from "lucide-react";
+import {
+  Check,
+  MessageSquare,
+  Pencil,
+  Settings,
+  Trash2,
+  X,
+} from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 
 interface Conversation {
@@ -108,10 +115,7 @@ const Sidebar = memo(function Sidebar({
               onClick={() => !disabled && onSelect(conv.conversationId)}
             >
               {editingId === conv.conversationId ? (
-                <div
-                  className="edit-row"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <div className="edit-row" onClick={(e) => e.stopPropagation()}>
                   <input
                     ref={inputRef}
                     className="edit-input"
@@ -162,7 +166,11 @@ const Sidebar = memo(function Sidebar({
       </nav>
 
       <div className="sidebar-footer">
-        <button className="sidebar-settings-btn" onClick={onOpenSettings} disabled={disabled}>
+        <button
+          className="sidebar-settings-btn"
+          onClick={onOpenSettings}
+          disabled={disabled}
+        >
           <Settings size={18} className="icon" />
           <span>Settings & Config</span>
         </button>

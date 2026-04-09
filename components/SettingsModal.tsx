@@ -18,7 +18,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   apiUrl: "https://llm.chiasegpu.vn/v1/chat/completions",
   apiKey: "",
   model: "claude-sonnet-4.6",
-  visionModel: "gpt-5.4",
+  visionModel: "claude-sonnet-4.6",
   combineModels: false,
   maxContext: 20,
 };
@@ -115,59 +115,16 @@ export default function SettingsModal({
                 type="text"
                 value={config.model}
                 onChange={(e) =>
-                  setConfig({ ...config, model: e.target.value })
+                  setConfig({
+                    ...config,
+                    model: e.target.value,
+                    visionModel: e.target.value,
+                    combineModels: false,
+                  })
                 }
               />
             </div>
-            <div className="input-field">
-              <label>Vision Model</label>
-              <input
-                type="text"
-                value={config.visionModel || ""}
-                onChange={(e) =>
-                  setConfig({ ...config, visionModel: e.target.value })
-                }
-                placeholder="Model for image processing"
-              />
-            </div>
-            <div
-              className="input-field"
-              style={{
-                flexDirection: "row",
-                alignItems: "flex-start",
-                gap: "8px",
-                marginTop: "-4px",
-              }}
-            >
-              <input
-                type="checkbox"
-                id="combineModels"
-                checked={config.combineModels || false}
-                onChange={(e) =>
-                  setConfig({ ...config, combineModels: e.target.checked })
-                }
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  cursor: "pointer",
-                  accentColor: "var(--accent)",
-                  marginTop: "3px",
-                }}
-              />
-              <label
-                htmlFor="combineModels"
-                style={{
-                  cursor: "pointer",
-                  fontSize: "0.85rem",
-                  color: "var(--text-secondary)",
-                }}
-              >
-                Check when you want to use vision model just in 1 msg
-                <br />
-                Uncheck when you want to use vision model in all msg if it has
-                images
-              </label>
-            </div>
+
             <div className="input-field">
               <label>Max Context Messages</label>
               <input
@@ -195,7 +152,7 @@ export default function SettingsModal({
             disabled={!isFormValid}
             style={{
               opacity: isFormValid ? 1 : 0.5,
-              cursor: isFormValid ? "pointer" : "not-allowed"
+              cursor: isFormValid ? "pointer" : "not-allowed",
             }}
             onClick={() => {
               if (isFormValid) {
