@@ -8,7 +8,7 @@ import SettingsModal, {
 } from "@/components/SettingsModal";
 import Sidebar from "@/components/Sidebar";
 import ThemeToggle from "@/components/ThemeToggle";
-import { Bot } from "lucide-react";
+import { Bot, Menu } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -45,6 +45,7 @@ export default function ChatPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [inputFocusSignal, setInputFocusSignal] = useState(0);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const fetchConversations = useCallback(async (cfg: AppConfig | null) => {
     if (!cfg) return;
@@ -337,20 +338,44 @@ export default function ChatPage() {
       <Sidebar
         conversations={conversations}
         currentId={currentId}
-        onSelect={setCurrentId}
-        onNew={createNewConversation}
+        onSelect={(id) => {
+          setCurrentId(id);
+          setIsMobileSidebarOpen(false);
+        }}
+        onNew={() => {
+          createNewConversation();
+          setIsMobileSidebarOpen(false);
+        }}
         onDelete={handleDelete}
         onDeleteAll={handleDeleteAll}
         onRename={handleRename}
         isLoading={loadingConvs}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={() => {
+          setIsSettingsOpen(true);
+          setIsMobileSidebarOpen(false);
+        }}
         disabled={sending}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
+      />
+
+      {/* Mobile sidebar overlay */}
+      <div
+        className={`sidebar-overlay ${isMobileSidebarOpen ? "visible" : ""}`}
+        onClick={() => setIsMobileSidebarOpen(false)}
       />
 
       <main className="main-panel">
         {/* Header */}
         <header className="chat-header">
           <div className="chat-header-inner">
+            <button
+              className="mobile-menu-btn"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu size={20} />
+            </button>
             <Bot className="header-icon" size={20} />
             <span className="header-title">
               {currentId

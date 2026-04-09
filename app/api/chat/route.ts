@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
     const configStr = req.headers.get("x-app-config");
     if (!configStr) throw new Error("No config provided");
     const config = JSON.parse(configStr);
-    console.log(config);
 
     const body = await req.json();
     const { conversationId, message, images } = body as {

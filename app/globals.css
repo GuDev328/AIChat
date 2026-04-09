@@ -1325,3 +1325,372 @@ html, body {
   cursor: default;
   animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ─── Responsive Styles ────────────────────────────── */
+
+/* Mobile sidebar toggle button */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.mobile-menu-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Sidebar mobile overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 998;
+  animation: fadeIn 0.2s ease;
+}
+
+.sidebar-overlay.visible {
+  display: block;
+}
+
+/* Tablet and below (≤1024px) */
+@media (max-width: 1024px) {
+  .messages-list {
+    padding: 20px 24px 8px;
+  }
+
+  .chat-header {
+    padding: 12px 20px;
+  }
+
+  .input-area {
+    padding: 10px 20px 14px;
+  }
+}
+
+/* Mobile (≤768px) */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-w: 280px;
+  }
+
+  /* Show mobile menu button */
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  /* Sidebar becomes a slide-out drawer */
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Main panel takes full width */
+  .main-panel {
+    width: 100vw;
+  }
+
+  /* Adjust header for mobile */
+  .chat-header {
+    padding: 10px 16px;
+    gap: 12px;
+  }
+
+  .chat-header-inner {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .header-title {
+    font-size: 0.9rem;
+    max-width: 200px;
+  }
+
+  /* Messages area adjustments */
+  .messages-area {
+    padding: 0;
+  }
+
+  .messages-list {
+    padding: 16px 12px 8px;
+    gap: 4px;
+  }
+
+  .message-row {
+    padding: 6px 0;
+    gap: 8px;
+  }
+
+  /* Adjust bubbles for mobile */
+  .user-bubble {
+    max-width: 92%;
+    font-size: 0.9rem;
+    padding: 4px 8px;
+  }
+
+  .assistant-bubble {
+    font-size: 0.9rem;
+    padding: 4px 8px;
+  }
+
+  .bubble {
+    line-height: 1.55;
+  }
+
+  /* Smaller avatars on mobile */
+  .avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .avatar svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Input area mobile adjustments */
+  .input-area {
+    padding: 8px 12px 12px;
+  }
+
+  .input-box {
+    min-height: 44px;
+    padding: 4px 6px;
+    gap: 6px;
+  }
+
+  .chat-input {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 6px 0;
+  }
+
+  .send-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .attach-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Welcome screen mobile */
+  .welcome-screen {
+    padding: 24px 16px;
+  }
+
+  .welcome-icon {
+    font-size: 2.5rem;
+  }
+
+  .welcome-title {
+    font-size: 1.5rem;
+  }
+
+  .welcome-sub {
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+  }
+
+  .welcome-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    max-width: 100%;
+  }
+
+  .suggestion-card {
+    padding: 12px 14px;
+    font-size: 0.85rem;
+  }
+
+  /* Image adjustments */
+  .message-images.single .message-image-thumb {
+    max-width: 100%;
+    max-height: 240px;
+  }
+
+  .message-images.grid .message-image-thumb {
+    width: 80px;
+    height: 80px;
+  }
+
+  .image-preview-strip {
+    padding: 6px 8px 0;
+  }
+
+  .image-preview-item {
+    width: 60px;
+    height: 60px;
+  }
+
+  /* Modal mobile adjustments */
+  .modal-content {
+    max-width: calc(100vw - 32px);
+    margin: 16px;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+  }
+
+  .modal-body {
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .modal-footer {
+    padding: 12px 20px;
+  }
+
+  .input-group-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Code blocks mobile */
+  .code-block-wrapper {
+    margin: 6px 0;
+  }
+
+  .code-block-header {
+    padding: 5px 10px;
+  }
+
+  .assistant-bubble pre,
+  .assistant-bubble code {
+    font-size: 0.75rem;
+  }
+
+  /* Tables mobile - make scrollable */
+  .assistant-bubble table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    font-size: 0.78rem;
+  }
+
+  .assistant-bubble th,
+  .assistant-bubble td {
+    padding: 8px 10px;
+  }
+
+  /* Hide message copy button on touch devices */
+  .message-copy-btn {
+    display: none;
+  }
+
+  /* Lightbox mobile */
+  .lightbox-backdrop {
+    padding: 12px;
+  }
+
+  .lightbox-close {
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Small mobile (≤480px) */
+@media (max-width: 480px) {
+  .messages-list {
+    padding: 12px 8px 8px;
+  }
+
+  .user-bubble {
+    max-width: 95%;
+  }
+
+  .chat-header {
+    padding: 8px 12px;
+  }
+
+  .header-title {
+    max-width: 150px;
+  }
+
+  .typing-bubble {
+    padding: 10px 14px;
+    min-width: 48px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .welcome-title {
+    font-size: 1.3rem;
+  }
+
+  .welcome-sub {
+    font-size: 0.85rem;
+  }
+}
+
+/* Landscape mode optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+  .sidebar {
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+
+  .welcome-screen {
+    padding: 16px;
+  }
+
+  .welcome-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+
+  .welcome-title {
+    font-size: 1.3rem;
+    margin-bottom: 6px;
+  }
+
+  .welcome-sub {
+    margin-bottom: 16px;
+  }
+}
+
+/* Safe area for notched phones */
+@supports (padding: max(0px)) {
+  @media (max-width: 768px) {
+    .chat-header {
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+      padding-top: max(10px, env(safe-area-inset-top));
+    }
+
+    .input-area {
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    .sidebar {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+}

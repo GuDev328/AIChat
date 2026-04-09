@@ -27,6 +27,8 @@ interface SidebarProps {
   isLoading: boolean;
   onOpenSettings: () => void;
   disabled?: boolean;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 const Sidebar = memo(function Sidebar({
@@ -40,6 +42,8 @@ const Sidebar = memo(function Sidebar({
   isLoading,
   onOpenSettings,
   disabled = false,
+  isMobileOpen = false,
+  onCloseMobile,
 }: SidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -69,14 +73,23 @@ const Sidebar = memo(function Sidebar({
   };
 
   return (
-    <aside className={`sidebar ${disabled ? "disabled-sidebar" : ""}`}>
+    <aside
+      className={`sidebar ${disabled ? "disabled-sidebar" : ""} ${isMobileOpen ? "mobile-open" : ""}`}
+    >
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <span className="sidebar-logo-icon">✦</span>
           <span className="sidebar-logo-text">GuAI</span>
         </div>
         <div className="sidebar-header-actions">
-          <button className="new-chat-btn" onClick={onNew} disabled={disabled}>
+          <button
+            className="new-chat-btn"
+            onClick={() => {
+              onNew();
+              onCloseMobile?.();
+            }}
+            disabled={disabled}
+          >
             <span>+</span>
             <span>New Chat</span>
           </button>
@@ -112,7 +125,12 @@ const Sidebar = memo(function Sidebar({
             <div
               key={conv.conversationId}
               className={`conv-item ${currentId === conv.conversationId ? "active" : ""} ${disabled ? "disabled-item" : ""}`}
-              onClick={() => !disabled && onSelect(conv.conversationId)}
+              onClick={() => {
+                if (!disabled) {
+                  onSelect(conv.conversationId);
+                  onCloseMobile?.();
+                }
+              }}
             >
               {editingId === conv.conversationId ? (
                 <div className="edit-row" onClick={(e) => e.stopPropagation()}>
@@ -168,7 +186,10 @@ const Sidebar = memo(function Sidebar({
       <div className="sidebar-footer">
         <button
           className="sidebar-settings-btn"
-          onClick={onOpenSettings}
+          onClick={() => {
+            onOpenSettings();
+            onCloseMobile?.();
+          }}
           disabled={disabled}
         >
           <Settings size={18} className="icon" />

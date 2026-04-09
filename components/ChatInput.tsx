@@ -268,7 +268,7 @@ export default function ChatInput({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          placeholder="Message GuAI (Shift+Enter for new line)"
+          placeholder="Message GuAI"
           rows={1}
           disabled={sending}
         />
